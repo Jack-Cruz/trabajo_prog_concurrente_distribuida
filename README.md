@@ -18,5 +18,6 @@ La estructura del Team contiene :
  - Points Target: Puntos ha alcanzar para conseguir la victoria
 
 ## Diseño Funciones Generales:
-**Get Opponent()** busca en la lista de jugadores un oponente para el jugador dado, asegurándose de que pertenezcan a equipos diferentes y tengan la misma posición.
+**Get Opponent()** busca en la lista de jugadores un oponente para el jugador dado, asegurándose de que pertenezcan a equipos diferentes y tengan la misma posición.  
+
 **PlayRockPaperScissors()** la función playRockPaperScissors simula una partida de "piedra, papel o tijeras" entre dos jugadores. Actualiza sus posiciones y puntajes según el resultado del juego.
