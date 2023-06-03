@@ -10,7 +10,8 @@ El jugador contiene la siguiente estructura:
 - Team: Identificador del equipo al que pertenece el jugador
 - Pòsition: Posición actual del jugador
 - Points: Puntos obtenidos por el jugador
-- Mutex: Exclusión mutua para avanzar la posición del jugador
+- Mutex: Exclusión mutua para avanzar la posición del jugador  
+
 **Estructura Team:** Se utiliza para agrupar a N cantidad de players (niños), en donde tambien estos tienen un numero de puntos consigo.
 La estructura del Team contiene :
  - ID: identificador de Team
@@ -20,4 +21,6 @@ La estructura del Team contiene :
 ## Diseño Funciones Generales:
 **Get Opponent()** busca en la lista de jugadores un oponente para el jugador dado, asegurándose de que pertenezcan a equipos diferentes y tengan la misma posición.  
 
-**PlayRockPaperScissors()** la función playRockPaperScissors simula una partida de "piedra, papel o tijeras" entre dos jugadores. Actualiza sus posiciones y puntajes según el resultado del juego.
+**PlayRockPaperScissors()** la función playRockPaperScissors simula una partida de "piedra, papel o tijeras" entre dos jugadores. Actualiza sus posiciones y puntajes según el resultado del juego.  
+
+**getWinningTeam ()**  recorre la lista de equipos y verifica cuál de ellos ha alcanzado el objetivo de puntos para determinar el equipo ganador del juego.
