@@ -19,14 +19,15 @@ type Team struct {
 	ID           int
 	Points       int
 	PointsTarget int
+	Mutex        sync.Mutex
 }
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
 
 	numTeams := 3
-	numPlayersPerTeam := 5
-	pointsTarget := 10
+	numPlayersPerTeam := 4
+	pointsTarget := 20
 
 	teams := make([]Team, numTeams)
 	for i := 0; i < numTeams; i++ {
@@ -65,7 +66,13 @@ func main() {
 					playRockPaperScissors(player, opponent)
 				}
 
-				if player.Points >= teams[player.Team].PointsTarget {
+				player.Mutex.Lock()
+				teams[player.Team].Mutex.Lock()
+				teams[player.Team].Points += player.Points
+				teams[player.Team].Mutex.Unlock()
+				player.Mutex.Unlock()
+
+				if teams[player.Team].Points >= teams[player.Team].PointsTarget {
 					close(gameOver)
 					return
 				}
@@ -100,9 +107,9 @@ func playRockPaperScissors(player1 *Player, player2 *Player) {
 	hand1 := rand.Intn(3)
 	hand2 := rand.Intn(3)
 
-	fmt.Printf("Jugador %d (equipo %d) juega %s. Jugador %d (equipo %d) juega %s.\n",
-		player1.ID, player1.Team, handSigns[hand1],
-		player2.ID, player2.Team, handSigns[hand2])
+	fmt.Printf("Jugador %d (equipo %d) juega %s puntos %d. Jugador %d (equipo %d) juega %s puntos %d.\n",
+		player1.ID, player1.Team, handSigns[hand1], player1.Points,
+		player2.ID, player2.Team, handSigns[hand2], player2.Points)
 
 	if hand1 == hand2 {
 		return
@@ -114,27 +121,57 @@ func playRockPaperScissors(player1 *Player, player2 *Player) {
 	switch hand1 {
 	case 0: // Piedra
 		if hand2 == 1 { // Papel
-			player2.Position--
+			player2.Position++
 			player2.Points++
+			player1.Position--
+
+			if player1.Points > 0 {
+				player1.Points--
+			}
 		} else { // Tijeras
 			player1.Position++
 			player1.Points++
+			player2.Position--
+			//player2.Points--
+			if player2.Points > 0 {
+				player2.Points--
+			}
 		}
 	case 1: // Papel
 		if hand2 == 0 { // Piedra
-			player1.Position--
-			player1.Points++
-		} else { // Tijeras
+			//player1.Position--
+			player1.Points--
 			player2.Position++
 			player2.Points++
+			if player1.Points > 0 {
+				player1.Points--
+			}
+		} else { // Tijeras
+			player2.Position--
+			//player2.Points--
+			player1.Position++
+			player1.Points++
+			if player2.Points > 0 {
+				player2.Points--
+			}
 		}
 	case 2: // Tijeras
 		if hand2 == 0 { // Piedra
 			player2.Position++
 			player2.Points++
+			player1.Position--
+			//player1.Points--
+			if player1.Points > 0 {
+				player1.Points--
+			}
 		} else { // Papel
 			player1.Position++
 			player1.Points++
+			player2.Position--
+			//player2.Points--
+			if player2.Points > 0 {
+				player2.Points--
+			}
 		}
 	}
 
