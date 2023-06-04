@@ -24,3 +24,7 @@ La estructura del Team contiene :
 **PlayRockPaperScissors()** la función playRockPaperScissors simula una partida de "piedra, papel o tijeras" entre dos jugadores. Actualiza sus posiciones y puntajes según el resultado del juego.  
 
 **getWinningTeam ()**  recorre la lista de equipos y verifica cuál de ellos ha alcanzado el objetivo de puntos para determinar el equipo ganador del juego.
+
+## Diagrama ilustrativo
+
+![diagrama ilustrativo](diagrama_prog_concurrente_distribuida.png)
