@@ -10,6 +10,7 @@ El jugador contiene la siguiente estructura:
 - Team: Identificador del equipo al que pertenece el jugador
 - Pòsition: Posición actual del jugador
 - Points: Puntos obtenidos por el jugador
+- Meta: Booleano que indica haber llegada a una posicion segura
 - Mutex: Exclusión mutua para avanzar la posición del jugador  
 
 **Estructura Team:** Se utiliza para agrupar a N cantidad de players (niños), en donde tambien estos tienen un numero de puntos consigo.
@@ -44,4 +45,4 @@ Diagrama 1: Diagrama de juego
 ![diagrama ilustrativo](diagrama_prog_concurrente_distribuida.png)
 
 Diagrama 2: Diagrama estrella del sistema distribuido
-![sistema distribuido](Postparcial-Distributed algorithm.jpg)
+![sistema distribuido](Postparcial-Distributed_algorithm.jpg)
