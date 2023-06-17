@@ -1,5 +1,6 @@
 # Trabajo Programacion Concurrente : Hoop Hula Hop Rock Paper Scissors
 Link video: [https://youtu.be/3WEhMVLoHco]
+Link video TA4: [https://youtu.be/6TOf5nT76-s]
 ## *Contexto*
 El juego describe un grupo de niños dentro de una area seleccionada con hula hulas, en donde se crean distintos grupos con N cantidades de niños, ellos pueden avanzar continuamente hasta el grupo contraria exceptuando que cuando uno de estos se encuentren con otro equipo tendran que realizar el juego de piedra papel y tijeras, en donde el ganador podra continuar y el perdedor regresara, el ganador tambien ganara 1 punto para su equipo. En este caso los el equipo que consiga Puntos Totales x 1.50, obtendra la victoria del juego.
 
