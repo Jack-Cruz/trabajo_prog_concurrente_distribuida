@@ -25,6 +25,20 @@ La estructura del Team contiene :
 
 **getWinningTeam ()**  recorre la lista de equipos y verifica cuál de ellos ha alcanzado el objetivo de puntos para determinar el equipo ganador del juego.
 
+Se agregó el componente de programación distribuida, este consiste en una arquitectura circular y comunicación a través de formato json. Cada nodo tiene dos puertos: input, output. El nodo recibe los datos a través del puerto input, luego los almacena y los envía al puerto output. Para este fin se agregaron las siguientes funciones:  
+
+**manejador()**: Esta función se encarga de procesar los datos que lleguen por el puerto input. Se maneja un parámetro contador, el cuál si llega al número 3, entonces, inicia el proceso de juego en ese nodo.
+
+**recibir()**: Se encarga del leer y preprocesar el dato (como eliminar espacios). 
+
+**enviarTeam()**: Se encarga de realizar la llamada hacia el puerto output y enviar los datos correspondientes.
+
+Los datos que se envian a través de los nodos:
+
+**Lista de Players**: Conjunto de niños en el juego.
+
+**Lista de Team**: Descripción de los equipos del juego.
+
 ## Diagrama ilustrativo
 
 ![diagrama ilustrativo](diagrama_prog_concurrente_distribuida.png)
