@@ -40,5 +40,8 @@ Los datos que se envian a través de los nodos:
 **Lista de Team**: Descripción de los equipos del juego.
 
 ## Diagrama ilustrativo
-
+Diagrama 1: Diagrama de juego
 ![diagrama ilustrativo](diagrama_prog_concurrente_distribuida.png)
+
+Diagrama 2: Diagrama estrella del sistema distribuido
+![sistema distribuido](Postparcial-Distributed algorithm.jpg)
