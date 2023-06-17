@@ -1,96 +1,234 @@
 package main
 
 import (
+	"bufio"
+	"encoding/json"
 	"fmt"
 	"math/rand"
+	"net"
+	"os"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
 
+var addressRemoto string
+var addressLocal string
+
 type Player struct {
 	ID       int
-	Team     int
+	Team     string
+	Teamint  int
 	Position int
 	Meta     bool
 	Mutex    sync.Mutex
 }
 
 type Team struct {
-	ID           int
+	ID           string
+	IDmint       int
 	Points       int
 	PointsTarget int
 	Mutex        sync.Mutex
 }
 
+//var player_anterior Player
+//var team_anterior Team
+//var player_actual Player
+//var team_actual Team
+
+var players []Player
+
+var teams []Team
+
+var cont int          //Contar el numero de equipos
+var contChan chan int //valor que nos indica que habra 3 equipos
+var numTeam int
+
 func main() {
-	rand.Seed(time.Now().UnixNano())
+	//Lectura por consola del host origin
+	brInput := bufio.NewReader(os.Stdin)
+	fmt.Print("Ingrese el puerto del host local: ")
+	puertoLocal, _ := brInput.ReadString('\n')
+	puertoLocal = strings.TrimSpace(puertoLocal)
 
-	numTeams := 3
-	numPlayersPerTeam := 4
+	addressLocal = fmt.Sprintf("localhost:%s", puertoLocal)
 
-	teams := make([]Team, numTeams)
-	for i := 0; i < numTeams; i++ {
-		teams[i] = Team{ID: i, PointsTarget: numPlayersPerTeam}
-	}
+	//Lectura por consola del host destino
+	brInput = bufio.NewReader(os.Stdin)
+	fmt.Print("Ingrese el puerto del host remoto: ")
+	puertoRemoto, _ := brInput.ReadString('\n')
+	puertoRemoto = strings.TrimSpace(puertoRemoto)
+	addressRemoto = fmt.Sprintf("localhost:%s", puertoRemoto)
 
-	players := make([]Player, numTeams*numPlayersPerTeam)
-	for i := 0; i < numTeams; i++ {
-		for j := 0; j < numPlayersPerTeam; j++ {
-			playerID := i*numPlayersPerTeam + j
-			players[playerID] = Player{
-				ID:       playerID,
-				Team:     i,
-				Position: 0,
-				Meta:     false,
-			}
-		}
-	}
+	//Lectura por consola del equipo
+	brInput = bufio.NewReader(os.Stdin)
+	fmt.Print("Ingrese el numero del equipo: ")
+	num, _ := brInput.ReadString('\n')
+	num = strings.TrimSpace(num)
+	numTeam, _ = strconv.Atoi(num)
 
-	gameOver := make(chan struct{})
-	wg := sync.WaitGroup{}
-	wg.Add(len(players))
+	ln, _ := net.Listen("tcp", addressLocal)
+	defer ln.Close()
 
-	for i := 0; i < len(players); i++ {
-		go func(player *Player) {
-			defer wg.Done()
-			for {
-				player.Mutex.Lock()
-				player.Position++
-				player.Mutex.Unlock()
+	contChan = make(chan int, 1)
+	contChan <- 0
 
-				time.Sleep(time.Millisecond * time.Duration(rand.Intn(500)))
-
-				opponent := getOpponent(players, player)
-				if opponent != nil && opponent.Position == player.Position && opponent.Meta == player.Meta {
-					playRockPaperScissors(player, opponent)
-				}
-
-				player.Mutex.Lock()
-				if player.Position == 20 {
-					teams[player.Team].Mutex.Lock()
-					teams[player.Team].Points += 1
-					teams[player.Team].Mutex.Unlock()
-					player.Meta = true
-					fmt.Printf("Jugador %d (equipo %d) se ha retirado y su equipo tiene %d.\n",
-						player.ID, player.Team, teams[player.Team].Points)
-				}
-				player.Mutex.Unlock()
-
-				if teams[player.Team].Points >= teams[player.Team].PointsTarget {
-					close(gameOver)
-					return
-				}
-			}
-		}(&players[i])
-	}
-
-	select {
-	case <-gameOver:
-		winningTeam := getWinningTeam(teams)
-		fmt.Printf("¡El equipo %d ha ganado con %d puntos!\n", winningTeam.ID, winningTeam.Points)
+	for {
+		conn, _ := ln.Accept()
+		go manejador(conn)
 	}
 }
 
+func manejador(conn net.Conn) {
+
+	num, jsonplayer, jsonteam, err := recibir(conn)
+	fmt.Printf("num %d, json %s, team %s\n", num, jsonplayer, jsonteam)
+	if err != nil {
+		fmt.Println("Error al recibir los datos de inicio:", err)
+		return
+	}
+	cont = <-contChan
+	if num == 0 && len(jsonplayer) == 0 && len(jsonteam) == 0 {
+		numTeams := 1
+		numPlayersPerTeam := 4
+
+		temas := make([]Team, numTeams)
+		for i := 0; i < numTeams; i++ {
+			temas[i] = Team{ID: conn.LocalAddr().String(), PointsTarget: numPlayersPerTeam, IDmint: numTeam}
+		}
+
+		jugadores := make([]Player, numTeams*numPlayersPerTeam)
+		for i := 0; i < numTeams; i++ {
+			for j := 0; j < numPlayersPerTeam; j++ {
+				playerID := i*numPlayersPerTeam + j
+				jugadores[playerID] = Player{
+					ID:       playerID,
+					Team:     conn.LocalAddr().String(),
+					Position: 0,
+					Meta:     false,
+					Teamint:  numTeam,
+				}
+			}
+		}
+		cont++
+		arryJsonPlayer, _ := json.Marshal(jugadores)
+		jsonStringPlayer := string(arryJsonPlayer)
+
+		arryJsonTeam, _ := json.Marshal(temas)
+		jsonStringTeam := string(arryJsonTeam)
+		contChan <- cont
+		fmt.Printf("Contador actual %d\n", cont)
+		enviarTeam(0, jsonStringPlayer, jsonStringTeam)
+
+	}
+	if len(jsonplayer) > 0 && len(jsonteam) > 0 && cont < 3 {
+		fmt.Println("llego a la segunda fase")
+		numTeams := 1
+		numPlayersPerTeam := 4
+
+		temas := make([]Team, numTeams)
+		for i := 0; i < numTeams; i++ {
+			temas[i] = Team{ID: conn.LocalAddr().String(), PointsTarget: numPlayersPerTeam, IDmint: numTeam}
+		}
+
+		jugadores := make([]Player, numTeams*numPlayersPerTeam)
+		for i := 0; i < numTeams; i++ {
+			for j := 0; j < numPlayersPerTeam; j++ {
+				playerID := i*numPlayersPerTeam + j
+				jugadores[playerID] = Player{
+					ID:       playerID,
+					Team:     conn.LocalAddr().String(),
+					Position: 0,
+					Meta:     false,
+					Teamint:  numTeam,
+				}
+			}
+		}
+		cont++
+		arryJsonPlayer, _ := json.Marshal(jugadores)
+		jsonStringPlayer := string(arryJsonPlayer)
+
+		arryJsonTeam, _ := json.Marshal(temas)
+		jsonStringTeam := string(arryJsonTeam)
+
+		var player_anterior []Player
+		var team_anterior []Team
+
+		json.Unmarshal([]byte(jsonplayer), &player_anterior)
+		json.Unmarshal([]byte(jsonteam), &team_anterior)
+
+		var player_actual []Player
+		var team_actual []Team
+
+		json.Unmarshal([]byte(jsonStringPlayer), &player_actual)
+		json.Unmarshal([]byte(jsonStringTeam), &team_actual)
+
+		// Combinar datos
+		player_anterior = append(player_anterior, player_actual...)
+		team_anterior = append(team_anterior, team_actual...)
+
+		// Codificar el objeto combinado a JSON
+		jsonCombPlayer, _ := json.Marshal(player_anterior)
+		jsonCombTeam, _ := json.Marshal(team_anterior)
+
+		//fmt.Printf("En segunda fase %s, team %s\n", string(jsonCombPlayer), string(jsonCombTeam))
+		contChan <- cont
+		fmt.Printf("Contador actual %d\n", cont)
+		enviarTeam(0, string(jsonCombPlayer), string(jsonCombTeam))
+
+	}
+	if cont >= 3 { //start game and pass all teams information}
+		//fmt.Printf("Ingrese sin deserializar %s , %s \n", jsonplayer, jsonteam)
+		json.Unmarshal([]byte(jsonplayer), &players)
+		json.Unmarshal([]byte(jsonteam), &teams)
+		fmt.Printf("Ingrese desarializar y comenzar juego\n")
+		gameOver := make(chan struct{})
+		wg := sync.WaitGroup{}
+		wg.Add(len(players))
+		for i := 0; i < len(players); i++ {
+			go func(player *Player) {
+				defer wg.Done()
+				for {
+					fmt.Printf("Estoy dentro del juego \n")
+					player.Mutex.Lock()
+					player.Position++
+					player.Mutex.Unlock()
+
+					time.Sleep(time.Millisecond * time.Duration(rand.Intn(500)))
+
+					opponent := getOpponent(players, player)
+					if opponent != nil && opponent.Position == player.Position && opponent.Meta == player.Meta {
+						playRockPaperScissors(player, opponent)
+					}
+
+					player.Mutex.Lock()
+					if player.Position == 20 {
+						teams[player.Teamint].Mutex.Lock()
+						teams[player.Teamint].Points += 1
+						teams[player.Teamint].Mutex.Unlock()
+						player.Meta = true
+						fmt.Printf("Jugador %d (equipo %d) se ha retirado y su equipo tiene %d.\n",
+							player.ID, player.Teamint, teams[player.Teamint].Points)
+					}
+					player.Mutex.Unlock()
+
+					if teams[player.Teamint].Points >= teams[player.Teamint].PointsTarget {
+						close(gameOver)
+						return
+					}
+				}
+			}(&players[i])
+		}
+		select {
+		case <-gameOver:
+			winningTeam := getWinningTeam(teams)
+			fmt.Printf("¡El equipo %d ha ganado con %d puntos!\n", winningTeam.IDmint, winningTeam.Points)
+		}
+	}
+	defer conn.Close()
+}
 func getOpponent(players []Player, player *Player) *Player {
 	for _, p := range players {
 		if p.Team != player.Team && p.Position == player.Position {
@@ -107,8 +245,8 @@ func playRockPaperScissors(player1 *Player, player2 *Player) {
 	hand2 := rand.Intn(3)
 
 	fmt.Printf("Jugador %d (equipo %d) juega %s . Jugador %d (equipo %d) juega %s.\n",
-		player1.ID, player1.Team, handSigns[hand1],
-		player2.ID, player2.Team, handSigns[hand2])
+		player1.ID, player1.Teamint, handSigns[hand1],
+		player2.ID, player2.Teamint, handSigns[hand2])
 
 	if hand1 == hand2 {
 		return
@@ -157,4 +295,44 @@ func getWinningTeam(teams []Team) Team {
 		}
 	}
 	return Team{}
+}
+
+func recibir(conn net.Conn) (num int, jsonplayer string, jsonteam string, err error) {
+	defer conn.Close()
+	reader := bufio.NewReader(conn)
+
+	// Leer el número
+	numStr, err := reader.ReadString('\n')
+	if err != nil {
+		return 0, "", "", err
+	}
+	numStr = strings.TrimSpace(numStr)
+	num, err = strconv.Atoi(numStr)
+	if err != nil {
+		return 0, "", "", err
+	}
+
+	// Leer el json del jugador
+	jsonplayer, err = reader.ReadString('\n')
+	if err != nil {
+		return 0, "", "", err
+	}
+	jsonplayer = strings.TrimSpace(jsonplayer)
+
+	// Leer el json del equipo
+	jsonteam, err = reader.ReadString('\n')
+	if err != nil {
+		return 0, "", "", err
+	}
+	jsonteam = strings.TrimSpace(jsonteam)
+
+	return num, jsonplayer, jsonteam, nil
+}
+
+func enviarTeam(num int, jsonPlayer string, jsonTeam string) {
+	conn, _ := net.Dial("tcp", addressRemoto)
+	defer conn.Close()
+	//fmt.Printf("Dentro de enviar %s , team %s\n", jsonPlayer, jsonTeam)
+	fmt.Fprintf(conn, "%d\n%s\n%s\n\n", num, jsonPlayer, jsonTeam)
+
 }
