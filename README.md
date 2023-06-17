@@ -45,4 +45,4 @@ Diagrama 1: Diagrama de juego
 ![diagrama ilustrativo](diagrama_prog_concurrente_distribuida.png)
 
 Diagrama 2: Diagrama estrella del sistema distribuido
-![sistema distribuido](Postparcial-Distributed_algorithm.jpg)
+![sistema distribuido](PostparcialDistributedalgorithm.jpg)
