@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Juego</title>
+  <script type="text/javascript">
+    var socket = new WebSocket("ws://192.168.9.92:8000/");
+
+    socket.onopen = function(event) {
+      console.log("Conexión WebSocket establecida");
+    };
+
+    socket.onmessage = function(event) {
+      var message = event.data;
+      var outputDiv = document.getElementById("output");
+      outputDiv.innerHTML += message + "<br>";
+    };
+
+    socket.onerror = function(error) {
+      console.log("Error en la conexión WebSocket: " + error);
+    };
+
+    socket.onclose = function(event) {
+      console.log("Conexión WebSocket cerrada");
+    };
+
+    function sendMessage() {
+      var input = document.getElementById("messageInput");
+      var message = input.value;
+      socket.send(message);
+      input.value = "";
+    }
+  </script>
+</head>
+<body>
+  <div id="output"></div>
+  <input type="text" id="messageInput" placeholder="Escribe un mensaje">
+  <button onclick="sendMessage()">Enviar</button>
+</body>
+</html>
