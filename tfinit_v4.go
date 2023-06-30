@@ -8,7 +8,6 @@ import (
 	"net"
 	"net/http"
 	"strconv"
-	"bufio"
 )
 
 type Player struct {
